@@ -11,4 +11,5 @@ import spittr.Spittle;
  */
 public interface SpittleRepository {
 	List<Spittle> findSpittle(long max,int count);
+	List<Spittle> findOne(long spittleId);
 }
