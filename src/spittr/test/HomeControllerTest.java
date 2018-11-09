@@ -14,9 +14,12 @@ import org.junit.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.servlet.view.InternalResourceView;
 
+import spittr.Spitter;
 import spittr.Spittle;
+import spittr.data.SpitterRepository;
 import spittr.data.SpittleRepository;
 import spittr.web.HomeController;
+import spittr.web.SpitterController;
 import spittr.web.SpittleController;
 
 public class HomeControllerTest {
@@ -76,5 +79,33 @@ public class HomeControllerTest {
 		//对“/spittles” 发起GET请求
 		mockMvc.perform(get("*/spittles/12345")).andExpect(view().name("spittle")).
 		andExpect(model().attributeExists("spillte")).andExpect(model().attribute("spittle", expectedSpittles));
+	}
+	
+	@Test
+	public void shouldShowRegistration()throws Exception{
+		SpitterController  controller = new SpitterController(null);
+		//构建MockMvc
+		MockMvc mockMvc = standaloneSetup(controller).build();
+		mockMvc.perform(get("/spitter/register")).andExpect(view().name("registerForm"));
+	}
+	
+	@Test
+	public void shouldProcessRegistration() throws Exception{
+		SpitterRepository mockRepository = mock(SpitterRepository.class);
+		SpitterController controller = new SpitterController(mockRepository);
+		Spitter unsaved = new Spitter("jbauer","24hour","Jack","Bauer");
+		Spitter saved = new Spitter(24L,"jbauer","24hour","Jack","Bauer");
+		when(mockRepository.save(unsaved)).thenReturn(saved);
+		//构建 MockMvc
+		MockMvc mockMvc = standaloneSetup(controller).build();
+		
+		mockMvc.perform(post("/spitter/register")
+				.param("firstName", "Jack")
+				.param("lastName", "Bauer")
+				.param("userName", "jbauer")
+				.param("password", "24hours"))
+				.andExpect(redirectedUrl("/spitter/jbauer"));
+		//校验保存情况
+		verify(mockRepository,atLeastOnce()).save(unsaved);
 	}
 }
